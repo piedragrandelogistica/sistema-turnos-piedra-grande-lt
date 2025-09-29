@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Turnos de Carga - Piedra Grande</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-tab:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            box-shadow: 0 4px 15px rgba(243,156,18,0.4);
+            transform: translateY(-2px);
+        }
+        
+        .content {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            min-height: 80vh;
+        }
+        
+        .section {
+            display: none;
+            padding: 2rem;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .form-section h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+        }
+        
+        .format-hint {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(52,152,219,0.05);
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-top: 0.2rem;
+            transform: scale(1.2);
+        }
+        
+        .checkbox-group label {
+            margin-bottom: 0;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52,152,219,0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .solicitud-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .solicitud-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .solicitud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .turno-numero {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .estado {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .estado.pendiente {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+        
+        .estado.aprobado {
+            background: #00b894;
+            color: white;
+        }
+        
+        .estado.rechazado {
+            background: #d63031;
+            color: white;
+        }
+        
+        .solicitud-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .info-item {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .info-item strong {
+            color: #2c3e50;
+        }
+        
+        .solicitud-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-modal.active {
+            display: flex;
+        }
+        
+        .login-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .login-modal-content h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .login-error {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        
+        .config-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #9b59b6;
+        }
+        
+        .config-section h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .firebase-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .firebase-status.connected {
+            background: rgba(39, 174, 96, 0.1);
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+
+        .firebase-status.disconnected {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .firebase-status.connecting {
+            background: rgba(243, 156, 18, 0.1);
+            color: #f39c12;
+            border: 1px solid #f39c12;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Turnos de Carga</h1>
+            <p style="text-align: center; opacity: 0.9; margin-top: 0.5rem;">Piedra Grande - Gestión de Turnos</p>
+            
+            <div id="firebaseStatus" class="firebase-status connecting">
+                <div class="loading"></div>
+                Conectando con Firebase...
+            </div>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showSection('solicitar', this)">Solicitar Turno</button>
+                <button class="nav-tab" onclick="showSection('administrar', this)" id="adminTab">Administrar</button>
+                <button class="nav-tab" onclick="showSection('consultar', this)">Consultar Estado</button>
+                <button class="nav-tab" onclick="showSection('configuracion', this)" id="configTab">Configuración</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Sección Solicitar Turno -->
+            <div id="solicitar" class="section active">
+                <form id="turnoForm">
+                    <div class="form-section">
+                        <h3>Información del Turno</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="numeroTurno">Número de Turno</label>
+                                <input type="text" id="numeroTurno" name="numeroTurno" readonly style="background: #e9ecef; font-weight: bold; color: #495057;">
+                            </div>
+                            <div class="form-group">
+                                <label for="fechaActual">Fecha de Solicitud</label>
+                                <input type="text" id="fechaActual" name="fechaActual" readonly style="background: #e9ecef;" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="fechaCarga">Fecha de Carga *</label>
+                                <input type="date" id="fechaCarga" name="fechaCarga" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Datos del Transporte</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="razonSocialTransporte">Razón Social del Transporte *</label>
+                                <input type="text" id="razonSocialTransporte" name="razonSocialTransporte" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cuitTransporte">CUIT *</label>
+                                <input type="text" id="cuitTransporte" name="cuitTransporte" placeholder="20123456789" maxlength="11" required>
+                                <div class="format-hint">Ingrese solo números (ej: 20123456789)</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="telefonoTransporte">Teléfono *</label>
+                                <input type="tel" id="telefonoTransporte" name="telefonoTransporte" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mailTransporte">Email *</label>
+                                <input type="email" id="mailTransporte" name="mailTransporte" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="razonSocialCliente">Razón Social del Cliente *</label>
+                                <input type="text" id="razonSocialCliente" name="razonSocialCliente" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Datos del Conductor</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="nombreChofer">Nombre del Chofer *</label>
+                                <input type="text" id="nombreChofer" name="nombreChofer" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dniChofer">DNI *</label>
+                                <input type="text" id="dniChofer" name="dniChofer" placeholder="12345678" maxlength="8" required>
+                                <div class="format-hint">Ingrese solo números (7 u 8 dígitos)</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="telefonoChofer">Teléfono *</label>
+                                <input type="tel" id="telefonoChofer" name="telefonoChofer" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="licenciaConducir">Licencia de Conducir - Fecha de Vigencia *</label>
+                                <input type="date" id="licenciaConducir" name="licenciaConducir" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="artEmpresa">ART - Empresa Prestadora *</label>
+                                <input type="text" id="artEmpresa" name="artEmpresa" placeholder="Ej: La Segunda ART" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="artVigencia">ART - Fecha de Vigencia *</label>
+                                <input type="date" id="artVigencia" name="artVigencia" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Información del Vehículo</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="patenteCamion">Patente Camión *</label>
+                                <input type="text" id="patenteCamion" name="patenteCamion" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="patenteSemi">Patente Semirremolque</label>
+                                <input type="text" id="patenteSemi" name="patenteSemi">
+                            </div>
+                            <div class="form-group">
+                                <label for="vtv">VTV *</label>
+                                <input type="date" id="vtv" name="vtv" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="seguroEmpresa">Seguro - Empresa Aseguradora *</label>
+                                <input type="text" id="seguroEmpresa" name="seguroEmpresa" placeholder="Ej: Seguros Rivadavia" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="seguroVigencia">Seguro - Fecha de Vigencia *</label>
+                                <input type="date" id="seguroVigencia" name="seguroVigencia" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="tipoCamion">Tipo de Camión *</label>
+                                <input type="text" id="tipoCamion" name="tipoCamion" placeholder="Ej: Furgón, Plataforma, Tolva, etc." required>
+                            </div>
+                            <div class="form-group">
+                                <label for="capacidadMaxima">Capacidad Máxima de Carga (kg) *</label>
+                                <input type="number" id="capacidadMaxima" name="capacidadMaxima" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="horaLlegada">Hora Estimada de Llegada a Planta *</label>
+                                <input type="time" id="horaLlegada" name="horaLlegada" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-left: 5px solid #f39c12;">
+                        <h3 style="color: #856404;">Información Importante</h3>
+                        <div style="background: rgba(255,255,255,0.8); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                            <p style="margin-bottom: 0.8rem; font-weight: 600; color: #856404;">
+                                <strong>Condiciones de Validez del Turno:</strong>
+                            </p>
+                            <p style="margin-bottom: 0.8rem; color: #6c5c00; font-size: 0.95rem;">
+                                • El turno para ser válido requiere la presencia de la unidad en planta a la hora acordada y en condiciones, listo para cargar.
+                            </p>
+                            <p style="margin-bottom: 0.8rem; font-weight: 600; color: #856404;">
+                                <strong>Modificaciones en el Orden de Carga:</strong>
+                            </p>
+                            <p style="color: #6c5c00; font-size: 0.95rem;">
+                                • La empresa se reserva el derecho a realizar modificaciones en el orden de carga, según: disponibilidad del material, inmediatez de la carga y condiciones climáticas.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Declaraciones y Condiciones</h3>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="epp" name="epp" required>
+                            <label for="epp">Declaro que el chofer cuenta con los Elementos de Protección Personal (EPP) requeridos *</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="normas" name="normas" required>
+                            <label for="normas">Acepto las normas y condiciones de carga establecidas *</label>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button type="submit" class="btn" id="submitBtn">Registrar Solicitud</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sección Administrar -->
+            <div id="administrar" class="section">
+                <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <h2 style="color: #2c3e50; margin: 0;">Panel de Administración</h2>
+                    <button class="btn btn-danger btn-small" style="margin: 0;" onclick="logout()">
+                        Cerrar Sesión
+                    </button>
+                </div>
+                    
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalSolicitudes">0</div>
+                        <div class="stat-label">Total Solicitudes</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                        <div class="stat-number" id="solicitudesPendientes">0</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #27ae60, #229954);">
+                        <div class="stat-number" id="solicitudesAprobadas">0</div>
+                        <div class="stat-label">Aprobadas</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                        <div class="stat-number" id="solicitudesRechazadas">0</div>
+                        <div class="stat-label">Rechazadas</div>
+                    </div>
+                </div>
+                <button class="btn" style="margin-top: 1rem;" onclick="generarReporte()">Generar Reporte Excel</button>
+                <div id="solicitudesList"></div>
+            </div>
+
+            <!-- Sección Consultar Estado -->
+            <div id="consultar" class="section">
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="color: #2c3e50; margin-bottom: 1rem;">Consultar Estado de Solicitud</h2>
+                    <div class="form-group" style="max-width: 400px;">
+                        <label for="consultarTurno">Número de Turno</label>
+                        <div style="display: flex; gap: 1rem;">
+                            <input type="text" id="consultarTurno" placeholder="Ingrese número de turno">
+                            <button class="btn" onclick="consultarEstado()">Consultar</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="resultadoConsulta"></div>
+            </div>
+
+            <!-- Sección Configuración -->
+            <div id="configuracion" class="section">
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="color: #2c3e50; margin-bottom: 1rem;">Configuración del Sistema</h2>
+                    
+                    <div class="config-section">
+                        <h3>Configuración de Turnos</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="numeroInicialTurnos">Número Inicial de Turnos</label>
+                                <input type="number" id="numeroInicialTurnos" min="1000" max="9999" value="1001">
+                                <small style="color: #666; margin-top: 0.5rem; display: block;">
+                                    Número desde el cual comenzarán a generarse los turnos.
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label for="horasLimite">Horas límite para cambios</label>
+                                <input type="number" id="horasLimite" min="1" max="72" value="24">
+                                <small style="color: #666; margin-top: 0.5rem; display: block;">
+                                    Horas antes de la fecha de carga para permitir cambios.
+                                </small>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="guardarConfiguracionTurnos()">Guardar Configuración</button>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Gestión de Datos</h3>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="exportarDatos()">Exportar Datos</button>
+                            <button class="btn" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);" onclick="importarDatos()">
+                                Importar Datos
+                            </button>
+                            <button class="btn btn-danger" onclick="limpiarDatos()">Limpiar Datos</button>
+                        </div>
+                        <input type="file" id="fileImport" accept=".json" style="display: none;">
+                        <div style="margin-top: 1rem; padding: 1rem; background: rgba(52,152,219,0.1); border-radius: 8px;">
+                            <p style="margin: 0; font-size: 0.9rem; color: #2c3e50;">
+                                <strong>Información:</strong> Use estas opciones para respaldar, restaurar o limpiar todos los datos del sistema.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Login -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <h3>Acceso Restringido</h3>
+            <p>Ingrese sus credenciales para acceder</p>
+            <form class="login-form" id="loginForm">
+                <input type="text" id="loginUsuario" placeholder="Usuario" required>
+                <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                <button type="submit" class="btn">Iniciar Sesión</button>
+                <button type="button" class="btn btn-danger" onclick="cancelarLogin()">Cancelar</button>
+            </form>
+            <div id="loginError" class="login-error"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // CONFIGURACIÓN FIREBASE - REEMPLAZAR CON TUS DATOS
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnkupjwjjyencblzBCRkNju7PZ31ZX2BE",
+            authDomain: "sistema-turnos-piedra-grande.firebaseapp.com",
+            databaseURL: "https://sistema-turnos-piedra-grande-default-rtdb.firebaseio.com",
+            projectId: "sistema-turnos-piedra-grande",
+            storageBucket: "sistema-turnos-piedra-grande.firebasestorage.app",
+            messagingSenderId: "538421685855",
+            appId: "1:538421685855:web:794b8098d3448188fa75ea"
+        };
+
+        // Variables globales
+        let solicitudes = [];
+        let numeroTurnoActual = 1001;
+        let isAuthenticated = false;
+        let currentUser = '';
+        let loginAttempts = 0;
+        let lastLoginAttempt = 0;
+        let database = null;
+        let isFirebaseConnected = false;
+        
+        // Configuración del sistema - Datos codificados para seguridad
+        const systemConfig = {
+            authData: 'TG9naXN0aWNhcGc6VHVybm9zY3ojMzAvODA=',
+            maxRetries: 3,
+            sessionTimeout: 3600000,
+            verificationHash: 'a1b2c3d4e5f6'
+        };
+
+        // Inicializar Firebase
+        function initializeFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                
+                // Verificar conexión
+                const connectedRef = database.ref('.info/connected');
+                connectedRef.on('value', (snap) => {
+                    if (snap.val() === true) {
+                        isFirebaseConnected = true;
+                        updateFirebaseStatus('connected');
+                        console.log('Conectado a Firebase');
+                        cargarDatosIniciales();
+                    } else {
+                        isFirebaseConnected = false;
+                        updateFirebaseStatus('disconnected');
+                        console.log('Desconectado de Firebase');
+                    }
+                });
+
+                // Escuchar cambios en solicitudes
+                database.ref('solicitudes').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    solicitudes = data ? Object.values(data) : [];
+                    actualizarEstadisticas();
+                    if (isAuthenticated && document.getElementById('administrar').classList.contains('active')) {
+                        cargarSolicitudesAdmin();
+                    }
+                });
+
+                // Escuchar cambios en configuración
+                database.ref('config').on('value', (snapshot) => {
+                    const config = snapshot.val();
+                    if (config && config.numeroTurnoActual) {
+                        numeroTurnoActual = config.numeroTurnoActual;
+                        document.getElementById('numeroTurno').value = numeroTurnoActual;
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error al inicializar Firebase:', error);
+                updateFirebaseStatus('disconnected');
+                // Fallback a localStorage
+                cargarDatosLocalStorage();
+            }
+        }
+
+        function updateFirebaseStatus(status) {
+            const statusElement = document.getElementById('firebaseStatus');
+            statusElement.className = `firebase-status ${status}`;
+            
+            switch (status) {
+                case 'connected':
+                    statusElement.innerHTML = '✅ Conectado a Firebase - Datos sincronizados';
+                    break;
+                case 'disconnected':
+                    statusElement.innerHTML = '❌ Sin conexión a Firebase - Usando datos locales';
+                    break;
+                case 'connecting':
+                    statusElement.innerHTML = '<div class="loading"></div> Conectando con Firebase...';
+                    break;
+            }
+        }
+
+        async function cargarDatosIniciales() {
+            try {
+                // Cargar configuración
+                const configSnapshot = await database.ref('config').once('value');
+                const config = configSnapshot.val();
+                
+                if (!config) {
+                    // Primera vez - establecer configuración inicial
+                    await database.ref('config').set({
+                        numeroTurnoActual: 1001,
+                        numeroInicialTurnos: 1001,
+                        horasLimite: 24
+                    });
+                    numeroTurnoActual = 1001;
+                } else {
+                    numeroTurnoActual = config.numeroTurnoActual || 1001;
+                    document.getElementById('numeroInicialTurnos').value = config.numeroInicialTurnos || 1001;
+                    document.getElementById('horasLimite').value = config.horasLimite || 24;
+                }
+
+                // Cargar solicitudes
+                const solicitudesSnapshot = await database.ref('solicitudes').once('value');
+                const solicitudesData = solicitudesSnapshot.val();
+                solicitudes = solicitudesData ? Object.values(solicitudesData) : [];
+
+                actualizarEstadisticas();
+                document.getElementById('numeroTurno').value = numeroTurnoActual;
+
+            } catch (error) {
+                console.error('Error al cargar datos iniciales:', error);
+                // Fallback a localStorage
+                cargarDatosLocalStorage();
+            }
+        }
+
+        function cargarDatosLocalStorage() {
+            // Fallback para cuando Firebase no esté disponible
+            solicitudes = JSON.parse(localStorage.getItem('solicitudes')) || [];
+            numeroTurnoActual = parseInt(localStorage.getItem('numeroTurnoActual')) || 1001;
+            actualizarEstadisticas();
+            document.getElementById('numeroTurno').value = numeroTurnoActual;
+        }
+
+        async function guardarSolicitud(solicitud) {
+            try {
+                if (isFirebaseConnected) {
+                    // Guardar en Firebase
+                    const solicitudRef = database.ref('solicitudes').push();
+                    await solicitudRef.set(solicitud);
+                    
+                    // Actualizar contador de turnos
+                    await database.ref('config/numeroTurnoActual').set(numeroTurnoActual + 1);
+                } else {
+                    // Fallback a localStorage
+                    solicitudes.push(solicitud);
+                    localStorage.setItem('solicitudes', JSON.stringify(solicitudes));
+                    localStorage.setItem('numeroTurnoActual', (numeroTurnoActual + 1).toString());
+                }
+                return true;
+            } catch (error) {
+                console.error('Error al guardar solicitud:', error);
+                return false;
+            }
+        }
+
+        async function actualizarSolicitud(numeroTurno, cambios) {
+            try {
+                if (isFirebaseConnected) {
+                    // Buscar la solicitud en Firebase
+                    const snapshot = await database.ref('solicitudes').once('value');
+                    const solicitudesData = snapshot.val();
+                    
+                    if (solicitudesData) {
+                        for (const [key, solicitud] of Object.entries(solicitudesData)) {
+                            if (solicitud.numeroTurno === numeroTurno) {
+                                await database.ref(`solicitudes/${key}`).update(cambios);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // Fallback a localStorage
+                    const solicitud = solicitudes.find(s => s.numeroTurno === numeroTurno);
+                    if (solicitud) {
+                        Object.assign(solicitud, cambios);
+                        localStorage.setItem('solicitudes', JSON.stringify(solicitudes));
+                    }
+                }
+                return true;
+            } catch (error) {
+                console.error('Error al actualizar solicitud:', error);
+                return false;
+            }
+        }
+        
+        // Función para decodificar credenciales
+        function getAuthCredentials() {
+            try {
+                const decoded = atob(systemConfig.authData);
+                const [username, password] = decoded.split(':');
+                return {
+                    'admin': { user: username, pass: password },
+                    'supervisor': { user: username, pass: password },
+                    'configuracion': { user: username, pass: password }
+                };
+            } catch (e) {
+                console.error('Error en configuración del sistema');
+                return {};
+            }
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarSistema();
+            setupEventListeners();
+            initializeFirebase();
+        });
+
+        function inicializarSistema() {
+            const fechaActual = new Date().toLocaleDateString('es-AR');
+            document.getElementById('fechaActual').value = fechaActual;
+            
+            const hoy = new Date();
+            const minFecha = hoy.toISOString().split('T')[0];
+            document.getElementById('fechaCarga').min = minFecha;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('turnoForm').addEventListener('submit', registrarSolicitud);
+            
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                iniciarSesion();
+            });
+            
+            document.getElementById('cuitTransporte').addEventListener('input', validarCUIT);
+            document.getElementById('dniChofer').addEventListener('input', validarDNI);
+            document.getElementById('fileImport').addEventListener('change', procesarImportacion);
+        }
+
+        function showSection(sectionName, targetElement = null) {
+            if ((sectionName === 'administrar' || sectionName === 'configuracion') && !isAuthenticated) {
+                mostrarModalLogin();
+                return;
+            }
+            
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(sectionName).classList.add('active');
+            
+            if (targetElement) {
+                targetElement.classList.add('active');
+            }
+            
+            if (sectionName === 'administrar') {
+                cargarSolicitudesAdmin();
+            }
+        }
+
+        async function registrarSolicitud(e) {
+            e.preventDefault();
+            
+            try {
+                // Validación simplificada
+                const requeridos = document.querySelectorAll('#turnoForm [required]');
+                let valido = true;
+                let camposFaltantes = [];
+                
+                requeridos.forEach(campo => {
+                    if (campo.type === 'checkbox') {
+                        if (!campo.checked) {
+                            valido = false;
+                            camposFaltantes.push(campo.name);
+                        }
+                    } else {
+                        if (!campo.value || campo.value.trim() === '') {
+                            valido = false;
+                            camposFaltantes.push(campo.name);
+                        }
+                    }
+                });
+                
+                if (!valido) {
+                    alert(`Por favor, complete los siguientes campos: ${camposFaltantes.join(', ')}`);
+                    return false;
+                }
+                
+                // Crear objeto solicitud
+                const formData = new FormData(e.target);
+                const solicitud = {
+                    numeroTurno: numeroTurnoActual,
+                    fechaSolicitud: new Date().toISOString(),
+                    estado: 'pendiente',
+                    fechaCarga: formData.get('fechaCarga'),
+                    razonSocialTransporte: formData.get('razonSocialTransporte'),
+                    cuitTransporte: formData.get('cuitTransporte'),
+                    telefonoTransporte: formData.get('telefonoTransporte'),
+                    mailTransporte: formData.get('mailTransporte'),
+                    razonSocialCliente: formData.get('razonSocialCliente'),
+                    nombreChofer: formData.get('nombreChofer'),
+                    dniChofer: formData.get('dniChofer'),
+                    telefonoChofer: formData.get('telefonoChofer'),
+                    licenciaConducir: formData.get('licenciaConducir'),
+                    artEmpresa: formData.get('artEmpresa'),
+                    artVigencia: formData.get('artVigencia'),
+                    patenteCamion: formData.get('patenteCamion'),
+                    patenteSemi: formData.get('patenteSemi'),
+                    vtv: formData.get('vtv'),
+                    seguroEmpresa: formData.get('seguroEmpresa'),
+                    seguroVigencia: formData.get('seguroVigencia'),
+                    tipoCamion: formData.get('tipoCamion'),
+                    capacidadMaxima: formData.get('capacidadMaxima'),
+                    horaLlegada: formData.get('horaLlegada'),
+                    epp: formData.get('epp'),
+                    normas: formData.get('normas')
+                };
+                
+                // Guardar solicitud
+                const guardado = await guardarSolicitud(solicitud);
+                
+                if (guardado) {
+                    // Incrementar número de turno
+                    numeroTurnoActual++;
+                    
+                    // Resetear formulario y preparar siguiente
+                    e.target.reset();
+                    document.getElementById('numeroTurno').value = numeroTurnoActual;
+                    document.getElementById('fechaActual').value = new Date().toLocaleDateString('es-AR');
+                    
+                    alert(`Solicitud registrada exitosamente. Número de turno: ${solicitud.numeroTurno}`);
+                } else {
+                    alert('Error al registrar la solicitud. Verifique su conexión e intente nuevamente.');
+                }
+                
+            } catch (error) {
+                console.error('Error al registrar solicitud:', error);
+                alert('Error al registrar la solicitud. Por favor, inténtelo nuevamente.');
+            }
+        }
+
+        function validarCUIT(e) {
+            const valor = e.target.value.replace(/\D/g, '');
+            e.target.value = valor;
+        }
+
+        function validarDNI(e) {
+            const valor = e.target.value.replace(/\D/g, '');
+            e.target.value = valor;
+        }
+
+        function mostrarModalLogin() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function cancelarLogin() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('loginError').textContent = '';
+            document.getElementById('loginForm').reset();
+        }
+
+        function iniciarSesion() {
+            const usuario = document.getElementById('loginUsuario').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            const now = Date.now();
+            if (now - lastLoginAttempt < 3000 && loginAttempts >= 3) {
+                errorDiv.textContent = 'Demasiados intentos. Espere un momento.';
+                return;
+            }
+            
+            const authCredentials = getAuthCredentials();
+            let isValidUser = false;
+            let userRole = '';
+            
+            for (const [role, credentials] of Object.entries(authCredentials)) {
+                if (usuario === credentials.user && password === credentials.pass) {
+                    isValidUser = true;
+                    userRole = role;
+                    break;
+                }
+            }
+            
+            if (isValidUser) {
+                isAuthenticated = true;
+                currentUser = usuario;
+                loginAttempts = 0;
+                document.getElementById('loginModal').classList.remove('active');
+                errorDiv.textContent = '';
+                document.getElementById('loginForm').reset();
+                
+                showSection('administrar');
+            } else {
+                loginAttempts++;
+                lastLoginAttempt = now;
+                errorDiv.textContent = 'Usuario o contraseña incorrectos';
+                document.getElementById('loginPassword').value = '';
+            }
+        }
+
+        function logout() {
+            isAuthenticated = false;
+            currentUser = '';
+            showSection('solicitar');
+        }
+
+        function cargarSolicitudesAdmin() {
+            const container = document.getElementById('solicitudesList');
+            
+            if (solicitudes.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No hay solicitudes registradas</p>';
+                return;
+            }
+            
+            let html = '<h3 style="color: #2c3e50; margin-bottom: 1rem;">Solicitudes de Turno</h3>';
+            
+            solicitudes.forEach(solicitud => {
+                html += `
+                    <div class="solicitud-card">
+                        <div class="solicitud-header">
+                            <div class="turno-numero">Turno N° ${solicitud.numeroTurno}</div>
+                            <div class="estado ${solicitud.estado}">${solicitud.estado.toUpperCase()}</div>
+                        </div>
+                        <div class="solicitud-info">
+                            <div class="info-item"><strong>Fecha Carga:</strong> ${solicitud.fechaCarga || 'No especificada'}</div>
+                            <div class="info-item"><strong>Transporte:</strong> ${solicitud.razonSocialTransporte || 'No especificado'}</div>
+                            <div class="info-item"><strong>Chofer:</strong> ${solicitud.nombreChofer || 'No especificado'}</div>
+                            <div class="info-item"><strong>Patente:</strong> ${solicitud.patenteCamion || 'No especificada'}</div>
+                            <div class="info-item"><strong>Cliente:</strong> ${solicitud.razonSocialCliente || 'No especificado'}</div>
+                            <div class="info-item"><strong>Hora Llegada:</strong> ${solicitud.horaLlegada || 'No especificada'}</div>
+                        </div>
+                        ${solicitud.estado === 'pendiente' ? `
+                            <div class="solicitud-actions">
+                                <button class="btn btn-success btn-small" onclick="aprobarSolicitud(${solicitud.numeroTurno})">
+                                    Aprobar
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="rechazarSolicitud(${solicitud.numeroTurno})">
+                                    Rechazar
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        async function aprobarSolicitud(numeroTurno) {
+            try {
+                const cambios = {
+                    estado: 'aprobado',
+                    fechaAprobacion: new Date().toISOString(),
+                    aprobadoPor: currentUser
+                };
+                
+                const actualizado = await actualizarSolicitud(numeroTurno, cambios);
+                
+                if (actualizado) {
+                    alert(`Turno ${numeroTurno} aprobado exitosamente`);
+                } else {
+                    alert('Error al aprobar el turno. Intente nuevamente.');
+                }
+            } catch (error) {
+                console.error('Error al aprobar solicitud:', error);
+                alert('Error al aprobar el turno. Intente nuevamente.');
+            }
+        }
+
+        async function rechazarSolicitud(numeroTurno) {
+            const motivo = prompt('Ingrese el motivo del rechazo (máximo 350 caracteres):');
+            
+            if (motivo === null) return;
+            
+            if (motivo.length > 350) {
+                alert('El motivo no puede superar los 350 caracteres');
+                return;
+            }
+            
+            try {
+                const cambios = {
+                    estado: 'rechazado',
+                    fechaRechazo: new Date().toISOString(),
+                    rechazadoPor: currentUser,
+                    motivoRechazo: motivo
+                };
+                
+                const actualizado = await actualizarSolicitud(numeroTurno, cambios);
+                
+                if (actualizado) {
+                    alert(`Turno ${numeroTurno} rechazado exitosamente`);
+                } else {
+                    alert('Error al rechazar el turno. Intente nuevamente.');
+                }
+            } catch (error) {
+                console.error('Error al rechazar solicitud:', error);
+                alert('Error al rechazar el turno. Intente nuevamente.');
+            }
+        }
+
+        function consultarEstado() {
+            const numeroTurno = document.getElementById('consultarTurno').value;
+            const resultadoDiv = document.getElementById('resultadoConsulta');
+            
+            if (!numeroTurno) {
+                alert('Por favor, ingrese un número de turno');
+                return;
+            }
+            
+            const solicitud = solicitudes.find(s => s.numeroTurno == numeroTurno);
+            
+            if (!solicitud) {
+                resultadoDiv.innerHTML = `
+                    <div class="solicitud-card" style="border-color: #e74c3c;">
+                        <p style="color: #e74c3c; text-align: center; font-weight: bold;">
+                            No se encontró ninguna solicitud con el turno N° ${numeroTurno}
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let estadoColor = '';
+            switch(solicitud.estado) {
+                case 'pendiente': estadoColor = '#f39c12'; break;
+                case 'aprobado': estadoColor = '#27ae60'; break;
+                case 'rechazado': estadoColor = '#e74c3c'; break;
+            }
+            
+            let html = `
+                <div class="solicitud-card" style="border-color: ${estadoColor};">
+                    <div class="solicitud-header">
+                        <div class="turno-numero">Turno N° ${solicitud.numeroTurno}</div>
+                        <div class="estado ${solicitud.estado}">${solicitud.estado.toUpperCase()}</div>
+                    </div>
+                    <div class="solicitud-info">
+                        <div class="info-item"><strong>Fecha Solicitud:</strong> ${new Date(solicitud.fechaSolicitud).toLocaleDateString('es-AR')}</div>
+                        <div class="info-item"><strong>Fecha Carga:</strong> ${solicitud.fechaCarga}</div>
+                        <div class="info-item"><strong>Transporte:</strong> ${solicitud.razonSocialTransporte}</div>
+                        <div class="info-item"><strong>Chofer:</strong> ${solicitud.nombreChofer}</div>
+                        <div class="info-item"><strong>Patente:</strong> ${solicitud.patenteCamion}</div>
+                        <div class="info-item"><strong>Cliente:</strong> ${solicitud.razonSocialCliente}</div>
+            `;
+            
+            if (solicitud.estado === 'aprobado' && solicitud.fechaAprobacion) {
+                html += `<div class="info-item"><strong>Fecha Aprobación:</strong> ${new Date(solicitud.fechaAprobacion).toLocaleDateString('es-AR')}</div>`;
+            }
+            
+            if (solicitud.estado === 'rechazado') {
+                if (solicitud.fechaRechazo) {
+                    html += `<div class="info-item"><strong>Fecha Rechazo:</strong> ${new Date(solicitud.fechaRechazo).toLocaleDateString('es-AR')}</div>`;
+                }
+                if (solicitud.motivoRechazo) {
+                    html += `<div class="info-item" style="grid-column: 1 / -1;"><strong>Motivo del Rechazo:</strong> ${solicitud.motivoRechazo}</div>`;
+                }
+            }
+            
+            html += `</div></div>`;
+            resultadoDiv.innerHTML = html;
+        }
+
+        function actualizarEstadisticas() {
+            const total = solicitudes.length;
+            const pendientes = solicitudes.filter(s => s.estado === 'pendiente').length;
+            const aprobadas = solicitudes.filter(s => s.estado === 'aprobado').length;
+            const rechazadas = solicitudes.filter(s => s.estado === 'rechazado').length;
+            
+            document.getElementById('totalSolicitudes').textContent = total;
+            document.getElementById('solicitudesPendientes').textContent = pendientes;
+            document.getElementById('solicitudesAprobadas').textContent = aprobadas;
+            document.getElementById('solicitudesRechazadas').textContent = rechazadas;
+        }
+
+        async function guardarConfiguracionTurnos() {
+            try {
+                const config = {
+                    numeroInicialTurnos: document.getElementById('numeroInicialTurnos').value,
+                    horasLimite: document.getElementById('horasLimite').value
+                };
+                
+                if (isFirebaseConnected) {
+                    await database.ref('config').update(config);
+                } else {
+                    localStorage.setItem('configuracion', JSON.stringify(config));
+                }
+                
+                alert('Configuración de turnos guardada exitosamente');
+            } catch (error) {
+                console.error('Error al guardar configuración:', error);
+                alert('Error al guardar la configuración');
+            }
+        }
+
+        function generarReporte() {
+            if (solicitudes.length === 0) {
+                alert('No hay datos para generar el reporte');
+                return;
+            }
+            
+            // Encabezados del reporte
+            const headers = [
+                'Numero Turno',
+                'Fecha Solicitud',
+                'Estado',
+                'Fecha Carga',
+                'Razón Social Transporte',
+                'CUIT Transporte',
+                'Teléfono Transporte',
+                'Email Transporte',
+                'Razón Social Cliente',
+                'Nombre Chofer',
+                'DNI Chofer',
+                'Teléfono Chofer',
+                'Licencia Conducir Vigencia',
+                'ART Empresa',
+                'ART Vigencia',
+                'Patente Camión',
+                'Patente Semirremolque',
+                'VTV',
+                'Seguro Empresa',
+                'Seguro Vigencia',
+                'Tipo Camión',
+                'Capacidad Máxima',
+                'Hora Llegada',
+                'EPP Declarado',
+                'Normas Aceptadas',
+                'Fecha Aprobación',
+                'Aprobado Por',
+                'Fecha Rechazo',
+                'Rechazado Por',
+                'Motivo Rechazo'
+            ];
+            
+            let excelContent = headers.join('\t') + '\n';
+            
+            solicitudes.forEach(solicitud => {
+                const fila = [
+                    solicitud.numeroTurno || '',
+                    solicitud.fechaSolicitud ? new Date(solicitud.fechaSolicitud).toLocaleDateString('es-AR') : '',
+                    solicitud.estado || '',
+                    solicitud.fechaCarga || '',
+                    solicitud.razonSocialTransporte || '',
+                    solicitud.cuitTransporte || '',
+                    solicitud.telefonoTransporte || '',
+                    solicitud.mailTransporte || '',
+                    solicitud.razonSocialCliente || '',
+                    solicitud.nombreChofer || '',
+                    solicitud.dniChofer || '',
+                    solicitud.telefonoChofer || '',
+                    solicitud.licenciaConducir || '',
+                    solicitud.artEmpresa || '',
+                    solicitud.artVigencia || '',
+                    solicitud.patenteCamion || '',
+                    solicitud.patenteSemi || '',
+                    solicitud.vtv || '',
+                    solicitud.seguroEmpresa || '',
+                    solicitud.seguroVigencia || '',
+                    solicitud.tipoCamion || '',
+                    solicitud.capacidadMaxima || '',
+                    solicitud.horaLlegada || '',
+                    solicitud.epp ? 'Sí' : 'No',
+                    solicitud.normas ? 'Sí' : 'No',
+                    solicitud.fechaAprobacion ? new Date(solicitud.fechaAprobacion).toLocaleDateString('es-AR') : '',
+                    solicitud.aprobadoPor || '',
+                    solicitud.fechaRechazo ? new Date(solicitud.fechaRechazo).toLocaleDateString('es-AR') : '',
+                    solicitud.rechazadoPor || '',
+                    solicitud.motivoRechazo || ''
+                ];
+                excelContent += fila.join('\t') + '\n';
+            });
+            
+            const blob = new Blob(['\uFEFF' + excelContent], { 
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8;' 
+            });
+            
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Reporte_Turnos_${new Date().toISOString().split('T')[0]}.xlsx`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert('Reporte Excel generado exitosamente');
+        }
+
+        async function exportarDatos() {
+            const datos = {
+                solicitudes: solicitudes,
+                numeroTurnoActual: numeroTurnoActual,
+                timestamp: new Date().toISOString(),
+                source: isFirebaseConnected ? 'firebase' : 'localStorage'
+            };
+            
+            const dataStr = JSON.stringify(datos, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `backup_sistema_turnos_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        function importarDatos() {
+            document.getElementById('fileImport').click();
+        }
+
+        async function procesarImportacion(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const datos = JSON.parse(e.target.result);
+                    
+                    if (confirm('¿Está seguro de importar estos datos? Esto reemplazará los datos actuales.')) {
+                        
+                        if (isFirebaseConnected) {
+                            // Limpiar datos existentes en Firebase
+                            await database.ref('solicitudes').remove();
+                            
+                            // Importar solicitudes
+                            if (datos.solicitudes && datos.solicitudes.length > 0) {
+                                for (const solicitud of datos.solicitudes) {
+                                    const solicitudRef = database.ref('solicitudes').push();
+                                    await solicitudRef.set(solicitud);
+                                }
+                            }
+                            
+                            // Actualizar configuración
+                            if (datos.numeroTurnoActual) {
+                                await database.ref('config/numeroTurnoActual').set(datos.numeroTurnoActual);
+                            }
+                        } else {
+                            // Fallback a localStorage
+                            if (datos.solicitudes) {
+                                solicitudes = datos.solicitudes;
+                                localStorage.setItem('solicitudes', JSON.stringify(solicitudes));
+                            }
+                            
+                            if (datos.numeroTurnoActual) {
+                                numeroTurnoActual = datos.numeroTurnoActual;
+                                localStorage.setItem('numeroTurnoActual', numeroTurnoActual.toString());
+                            }
+                            
+                            actualizarEstadisticas();
+                            document.getElementById('numeroTurno').value = numeroTurnoActual;
+                        }
+                        
+                        alert('Datos importados exitosamente');
+                    }
+                } catch (error) {
+                    console.error('Error al procesar importación:', error);
+                    alert('Error al procesar el archivo. Verifique que sea un archivo válido.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function limpiarDatos() {
+            if (confirm('¿Está seguro de eliminar todos los datos? Esta acción no se puede deshacer.')) {
+                try {
+                    if (isFirebaseConnected) {
+                        // Limpiar datos en Firebase
+                        await database.ref('solicitudes').remove();
+                        await database.ref('config').set({
+                            numeroTurnoActual: 1001,
+                            numeroInicialTurnos: 1001,
+                            horasLimite: 24
+                        });
+                    } else {
+                        // Limpiar localStorage
+                        localStorage.removeItem('solicitudes');
+                        localStorage.removeItem('numeroTurnoActual');
+                        localStorage.removeItem('configuracion');
+                    }
+                    
+                    // Resetear variables locales
+                    solicitudes = [];
+                    numeroTurnoActual = 1001;
+                    
+                    // Actualizar interfaz
+                    actualizarEstadisticas();
+                    document.getElementById('numeroTurno').value = numeroTurnoActual;
+                    document.getElementById('numeroInicialTurnos').value = 1001;
+                    document.getElementById('horasLimite').value = 24;
+                    
+                    if (document.getElementById('administrar').classList.contains('active')) {
+                        cargarSolicitudesAdmin();
+                    }
+                    
+                    alert('Todos los datos han sido eliminados');
+                } catch (error) {
+                    console.error('Error al limpiar datos:', error);
+                    alert('Error al limpiar los datos');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
